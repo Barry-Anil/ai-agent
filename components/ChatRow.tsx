@@ -4,6 +4,9 @@ import { useRouter } from 'next/navigation';
 import React, { use } from 'react'
 import { Button } from './ui/button';
 import { TrashIcon } from 'lucide-react';
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import TimeAgo from "react-timeago";
 
 function ChatRow({
     chat,
@@ -15,21 +18,35 @@ function ChatRow({
 }) {
 
     const router = useRouter()
-    const {closeMobileView} = use(NavigationContext)
+    const { closeMobileView } = use(NavigationContext)
 
     const handleClick = () => {
         router.push(`/dashboard/chat/${chat._id}`);
         closeMobileView();
     }
 
+    const lastMessage = useQuery(api.messages.getLastMessage, {
+        chatId: chat._id,
+    });
+
+
     return (
-        <div 
+        <div
             className='group rounded-xl border border-gray-200/30 bg-white/50 backdrop-blur-sm hover:bg-white/80 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md'
             onClick={handleClick}
         >
             <div className='p-4'>
                 <div className='flex items-start justify-between'>
-                    chat
+                    <p className="text-sm text-gray-600 truncate flex-1 font-medium">
+                        {lastMessage ? (
+                            <>
+                                {lastMessage.role === "user" ? "You: " : "AI: "}
+                                {lastMessage.content.replace(/\\n/g, "\n")}
+                            </>
+                        ) : (
+                            <span className="text-gray-400">New conversation</span>
+                        )}
+                    </p>
                     <Button
                         variant={"ghost"}
                         size={'icon'}
@@ -44,11 +61,11 @@ function ChatRow({
 
                 </div>
                 {/* last message  */}
-                {/* {lastMessage && (
+                {lastMessage && (
                     <p className='text-xs text-gray-400 mt-1.5 font-medium'>
                         <TimeAgo date={lastMessage.createdAt} />
                     </p>
-                )} */}
+                )}
             </div>
         </div>
     )
